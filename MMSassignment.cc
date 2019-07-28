@@ -86,11 +86,11 @@ namespace MMSassignment
     const Point<dim> center (0.0,0.0);
     double ri = 0.6;
     double dis = center.distance(p);                                                                                                          
-        
+    
     if (component == 0)                                                                          
-      if (dis < ri) 
-        value = 1;
-     
+      if (dis < ri)
+        value = 1; 
+
     return value;
   }
 
