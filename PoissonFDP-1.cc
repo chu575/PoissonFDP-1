@@ -185,13 +185,13 @@ namespace PoissonFictitiousDomainProblem
             const double             phi_j_l      = fe_values[lamda].value (j, q);
 
             local_matrix(i,j) += (  grad_phi_i_u * grad_phi_j_u
-                 		  - ib_location_weight[q] * phi_i_u * phi_j_l     
+                 		  + ib_location_weight[q] * phi_i_u * phi_j_l     
 				  + ib_location_weight[q] * phi_i_l * phi_j_u                
                                   + (1-ib_location_weight[q]) * phi_i_l * phi_j_l                                   
                                  ) * fe_values.JxW(q);                                       
         }
 
-          local_rhs(i) += (  phi_i_u * rhs_values_u[q]   
+          local_rhs(i) += (  (1-ib_location_weight[q]) * phi_i_u * rhs_values_u[q] + ib_location_weight[q] * phi_i_u * 0.0                                             
 	                   + ib_location_weight[q] * phi_i_l * rhs_values_l[q]
 		           + (1-ib_location_weight[q]) * phi_i_l * 0.0                                            
                           ) * fe_values.JxW(q);

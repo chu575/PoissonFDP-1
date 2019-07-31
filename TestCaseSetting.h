@@ -78,7 +78,7 @@ namespace MMSassignment
   class ErrorComputationRange : public Function<dim>
   {
   public:
-    ErrorComputationRange () : Function<dim>(dim){}
+    ErrorComputationRange () : Function<dim>(dim) {}
 
     virtual double value (const Point<dim>   &p,
                           const unsigned int  component = 0) const;

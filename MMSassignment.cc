@@ -43,38 +43,31 @@ namespace MMSassignment
 
 
   // This function is set for the R.H.S. of the u-equation, which is f_tilda in the dissertation.
-  // f_tilda equals to f in the needed domain lowercase_omega, but equals zero in the rest area  
+  // However, here, I plan to let the weight factor, IBlocation to decide its value
   template <int dim>
   double RightHandSide_u<dim>::value (const Point<dim>  &p,
 				     const unsigned int /*component*/) const
   {
-    double f_tilda= 0.0;
+    double value;  //////
     const Point<dim> center (0.0,0.0);
     double dis = center.distance(p);
     double ri = 0.6;    // radius of the needed domain
     double g1 = 6.0;    // constraint on the immersed boundary
 
-    if (dis < ri)
-      f_tilda = -4*g1/(ri*ri);     
-    return f_tilda;
+    value= -4*g1/(ri*ri);
+     
+    return value;            //////
   } 
 
 
   // This class is set for the R.H.S. of the Lambda-equation, which is g_tilda in the dissertation
-  // g_tilda is equal to g in the area outside the need domain lowercase_omega.
+  // However, here, I plan to let the weight factor, IBlocation to decide its value
   template <int dim>
   double RightHandSide_l<dim>::value (const Point<dim>  &p,
                                     const unsigned int /*component*/) const
-  { 
-    double g_tilda = 0.0;
-    const Point<dim> center (0.0,0.0);
-    double dis = center.distance(p);
-    double ri = 0.6;                                                                               
-    double g1 = 6.0;                                                                               
-
-    if (dis >= ri)
-      g_tilda = g1;                                                                                                                           
-    return g_tilda;
+  {
+    double value = 6.0;      //////                                                                                                                           
+    return value;
   }
 
  
@@ -86,11 +79,11 @@ namespace MMSassignment
     const Point<dim> center (0.0,0.0);
     double ri = 0.6;
     double dis = center.distance(p);                                                                                                          
-    
+        
     if (component == 0)                                                                          
-      if (dis < ri)
-        value = 1; 
-
+      if (dis < ri) 
+        value = 1;
+     
     return value;
   }
 
