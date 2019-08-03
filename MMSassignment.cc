@@ -66,7 +66,7 @@ namespace MMSassignment
   double RightHandSide_l<dim>::value (const Point<dim>  &p,
                                     const unsigned int /*component*/) const
   {
-    double value = 6.0;      //////                                                                                                                           
+    double value = 6.0;      //////                                                                                                           
     return value;
   }
 
