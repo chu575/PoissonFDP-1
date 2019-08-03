@@ -95,15 +95,104 @@ namespace IBimplementation
   using namespace dealii;
  
   template <int dim>
-  class IBlocation : public Function<dim>
+  class IBlocation_approach1 : public Function<dim>
   {
     public:
-      IBlocation () : Function<dim>(dim) {}
+      IBlocation_approach1 () : Function<dim>(dim) {}
 
       virtual double value (const Point<dim>   &p,
                             const unsigned int  component = 0) const;
   }; 
-  template class IBlocation<2>;     
+  template class IBlocation_approach1<2>;  
+
+  template <int dim>
+  class smoothfunction_approach1 : public Function<dim>                       
+  {
+    public:
+      smoothfunction_approach1 () : Function<dim>(dim) {}
+
+      virtual double value (const Point<dim>   &p,
+                            const unsigned int  component = 0) const;
+  };   
+  template class smoothfunction_approach1<2>; 
+
+
+  template <int dim>
+  class IBlocation_approach2 : public Function<dim>
+  {
+    public:
+      IBlocation_approach2 (const unsigned int refinement_number, const double width_const) 
+        : 
+        Function<dim>(dim),
+        refinement_number (refinement_number),
+        width_const (width_const)
+        {}
+
+      virtual double value (const Point<dim>   &p,
+                            const unsigned int  component = 0) const;
+
+      const unsigned int refinement_number;
+      const double width_const;
+  }; 
+  template class IBlocation_approach2<2>;  
+
+  template <int dim>
+  class smoothfunction_approach2_const : public Function<dim>                       
+  {
+    public:
+      smoothfunction_approach2_const (const unsigned int refinement_number, const double width_const) 
+        : 
+        Function<dim>(dim),
+        refinement_number (refinement_number),
+        width_const (width_const)
+        {}
+
+      virtual double value (const Point<dim>   &p,
+                            const unsigned int  component = 0) const;
+
+      const unsigned int refinement_number;
+      const double width_const;
+  };   
+  template class smoothfunction_approach2_const<2>; 
+
+  template <int dim>
+  class smoothfunction_approach2_trian : public Function<dim>                       
+  {
+    public:
+      smoothfunction_approach2_trian (const unsigned int refinement_number, const double width_const) 
+        : 
+        Function<dim>(dim),
+        refinement_number (refinement_number),
+        width_const (width_const)
+        {}
+
+      virtual double value (const Point<dim>   &p,
+                            const unsigned int  component = 0) const;
+
+      const unsigned int refinement_number;
+      const double width_const;
+  };   
+  template class smoothfunction_approach2_trian<2>; 
+
+  template <int dim>
+  class smoothfunction_approach2_gauss : public Function<dim>                       
+  {
+    public:
+      smoothfunction_approach2_gauss (const unsigned int refinement_number, const double width_const) 
+        : 
+        Function<dim>(dim),
+        refinement_number (refinement_number),
+        width_const (width_const)
+        {}
+
+      virtual double value (const Point<dim>   &p,
+                            const unsigned int  component = 0) const;
+
+      const unsigned int refinement_number;
+      const double width_const;
+  };   
+  template class smoothfunction_approach2_gauss<2>;
+ 
 }// end of namespace IB implementation
 
 #endif          

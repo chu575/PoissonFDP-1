@@ -43,7 +43,8 @@ namespace PoissonFictitiousDomainProblem
   class PFDP
   {
     public:
-      PFDP (const unsigned int degree, const unsigned int refinement_number);  
+      PFDP (const unsigned int degree, const unsigned int refinement_number, const unsigned int approach,
+            const unsigned int smooth_function, const double width_const);  
       void run ();
 
     private:
@@ -53,8 +54,11 @@ namespace PoissonFictitiousDomainProblem
       void solve ();
       void output_results () const;
 
-      const unsigned int   degree;
-      const unsigned int   refinement_number;   
+      const unsigned int    degree;
+      const unsigned int    refinement_number; 
+      const unsigned int    approach;
+      const unsigned int    smooth_function;
+      const double          width_const;
 
       Triangulation<dim>   triangulation;
       FESystem<dim>        fe;
@@ -67,15 +71,19 @@ namespace PoissonFictitiousDomainProblem
       BlockVector<double>       system_rhs;
   };
   
-
+  
   template <int dim>
-  PFDP<dim>::PFDP (const unsigned int degree, const unsigned int refinement_number)
+  PFDP<dim>::PFDP (const unsigned int degree, const unsigned int refinement_number, const unsigned int approach, 
+                   const unsigned int smooth_function, const double width_const)
     :
     degree (degree),
     fe (FE_Q<dim>(degree), 1,                                                                      
 	FE_Q<dim>(degree), 1),                                                                     
     dof_handler (triangulation),
-    refinement_number (refinement_number)         
+    refinement_number (refinement_number),
+    approach (approach),
+    smooth_function (smooth_function),
+    width_const (width_const)
   {}
 
 
@@ -152,8 +160,15 @@ namespace PoissonFictitiousDomainProblem
     const RightHandSide_l<dim>          right_hand_side_l;    
     std::vector<double> rhs_values_l (n_q_points);                         
                                             
-    const IBlocation<dim> ib_location;                      
-    std::vector<double> ib_location_weight (n_q_points);  
+    const IBlocation_approach1<dim> ibla1; 
+    const IBlocation_approach2<dim> ibla2(refinement_number, width_const);                     
+    std::vector<double> iblocation_weight (n_q_points); 
+
+    const smoothfunction_approach1<dim> sfa1;
+    const smoothfunction_approach2_const<dim> sfa2c(refinement_number, width_const);
+    const smoothfunction_approach2_trian<dim> sfa2t(refinement_number, width_const);
+    const smoothfunction_approach2_gauss<dim> sfa2g(refinement_number, width_const);
+    std::vector<double> sf (n_q_points); 
            
     const FEValuesExtractors::Scalar u (0);
     const FEValuesExtractors::Scalar lamda (1);                           
@@ -168,9 +183,26 @@ namespace PoissonFictitiousDomainProblem
       local_rhs = 0;
 
       right_hand_side_u.value_list (fe_values.get_quadrature_points(), rhs_values_u);                            
-      right_hand_side_l.value_list (fe_values.get_quadrature_points(), rhs_values_l);                                       
-      ib_location.value_list (fe_values.get_quadrature_points(), ib_location_weight);
-        
+      right_hand_side_l.value_list (fe_values.get_quadrature_points(), rhs_values_l);  
+                       
+      
+      if (approach == 1)
+      {              
+        ibla1.value_list (fe_values.get_quadrature_points(), iblocation_weight);
+        sfa1.value_list (fe_values.get_quadrature_points(), sf); 
+      }
+      else 
+      {
+        ibla2.value_list (fe_values.get_quadrature_points(), iblocation_weight);
+
+        if (smooth_function == 1)
+          sfa2c.value_list (fe_values.get_quadrature_points(), sf); 
+        else if (smooth_function == 2)
+          sfa2t.value_list (fe_values.get_quadrature_points(), sf);
+        else
+          sfa2g.value_list (fe_values.get_quadrature_points(), sf);   
+      }
+              
       for (unsigned int q=0; q<n_q_points; ++q)	 
         for (unsigned int i=0; i<dofs_per_cell; ++i)
         {
@@ -185,15 +217,16 @@ namespace PoissonFictitiousDomainProblem
             const double             phi_j_l      = fe_values[lamda].value (j, q);
 
             local_matrix(i,j) += (  grad_phi_i_u * grad_phi_j_u
-                 		  + ib_location_weight[q] * phi_i_u * phi_j_l     
-				  + ib_location_weight[q] * phi_i_l * phi_j_u                
-                                  + (1-ib_location_weight[q]) * phi_i_l * phi_j_l                                   
+                 		  + iblocation_weight[q] * sf[q] * phi_i_u * phi_j_l    
+ 
+				  + iblocation_weight[q] * sf[q] * phi_i_l * phi_j_u          
+                                  + (1-iblocation_weight[q]) * phi_i_l * phi_j_l                                   
                                  ) * fe_values.JxW(q);                                       
         }
 
-          local_rhs(i) += (  (1-ib_location_weight[q]) * phi_i_u * rhs_values_u[q] + ib_location_weight[q] * phi_i_u * 0.0                                             
-	                   + ib_location_weight[q] * phi_i_l * rhs_values_l[q]
-		           + (1-ib_location_weight[q]) * phi_i_l * 0.0                                            
+          local_rhs(i) += (  (1-iblocation_weight[q]) * phi_i_u * rhs_values_u[q] + iblocation_weight[q] * phi_i_u * 0.0                                             
+	                   + iblocation_weight[q] * sf[q] * phi_i_l * rhs_values_l[q]
+		           + (1-iblocation_weight[q]) * phi_i_l * 0.0                                            
                           ) * fe_values.JxW(q);
         }
        
@@ -346,11 +379,22 @@ int main ()
   std::cin >> refinement_number;          
   unsigned int degree = 0;                  
   std::cout << " degree for Finite Element class= " << std::endl;   // degree 1 represents Q1 element
-  std::cin >> degree;          
+  std::cin >> degree;
 
-  std::cout << "start to test this code" << std::endl;
-
-  PFDP<2> pfdp(degree, refinement_number);  
+  unsigned int approach = 0;                  
+  std::cout << " Approach for IB implementation, 1 is approach 1, 2 is approach 2 " << std::endl;   
+  std::cin >> approach;
+  unsigned int smooth_function = 0;
+  double width_const = 0.0;  // related to the width of boundary region
+  if (approach == 2)
+  {            
+    std::cout << " choose smooth function, 1 is constant, 2 is Triangle, 3 is Gaussian = " << std::endl;   
+    std::cin >> smooth_function; 
+    std::cout << " constant c = " << std::endl;   
+    std::cin >> width_const;           
+  }
+    
+  PFDP<2> pfdp(degree, refinement_number, approach, smooth_function, width_const);  
   pfdp.run ();
   
   return 0;
