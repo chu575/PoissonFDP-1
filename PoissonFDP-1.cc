@@ -217,7 +217,7 @@ namespace PoissonFictitiousDomainProblem
             const double             phi_j_l      = fe_values[lamda].value (j, q);
 
             local_matrix(i,j) += (  grad_phi_i_u * grad_phi_j_u
-                 		  + iblocation_weight[q] * sf[q] * phi_i_u * phi_j_l    
+                 		  - iblocation_weight[q] * sf[q] * phi_i_u * phi_j_l      ////////////// original symbol
  
 				  + iblocation_weight[q] * sf[q] * phi_i_l * phi_j_u          
                                   + (1-iblocation_weight[q]) * phi_i_l * phi_j_l                                   
@@ -381,9 +381,10 @@ int main ()
   std::cout << " degree for Finite Element class= " << std::endl;   // degree 1 represents Q1 element
   std::cin >> degree;
 
-  unsigned int approach = 0;                  
+  unsigned int approach = 0;  //////                
   std::cout << " Approach for IB implementation, 1 is approach 1, 2 is approach 2 " << std::endl;   
   std::cin >> approach;
+  
   unsigned int smooth_function = 0;
   double width_const = 0.0;  // related to the width of boundary region
   if (approach == 2)
@@ -393,7 +394,8 @@ int main ()
     std::cout << " constant c = " << std::endl;   
     std::cin >> width_const;           
   }
-    
+  
+  
   PFDP<2> pfdp(degree, refinement_number, approach, smooth_function, width_const);  
   pfdp.run ();
   
